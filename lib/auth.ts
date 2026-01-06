@@ -75,40 +75,46 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Debug: log account/profile to help debug Google OAuth issues
-      if (account?.provider === 'google') {
-        console.log('Google signIn callback. account:', JSON.stringify(account), 'profile:', JSON.stringify(profile))
-      }
-
-      // Auto-create Google users in the database
-      if (account?.provider === 'google' && profile?.email) {
-        try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: profile.email },
-          })
-
-          if (!existingUser) {
-            // Create new user from Google profile
-            await prisma.user.create({
-              data: {
-                email: profile.email,
-                name: profile.name || 'User',
-                role: 'USER',
-                // Google users have no password
-                password: null,
-              },
-            })
-          }
-          return true
-        } catch (error) {
-          console.error('Error creating Google user:', error)
-          return false
+      try {
+        // Debug: log account/profile to help debug Google OAuth issues
+        if (account?.provider === 'google') {
+          console.log('Google signIn callback. account:', JSON.stringify(account), 'profile:', JSON.stringify(profile))
         }
-      }
 
-      // Allow credentials login
-      return true
+        // Auto-create Google users in the database
+        if (account?.provider === 'google' && profile?.email) {
+          try {
+            const existingUser = await prisma.user.findUnique({
+              where: { email: profile.email },
+            })
+
+            if (!existingUser) {
+              // Create new user from Google profile
+              await prisma.user.create({
+                data: {
+                  email: profile.email,
+                  name: profile.name || 'User',
+                  role: 'USER',
+                  // Google users have no password
+                  password: null,
+                },
+              })
+            }
+            return true
+          } catch (error) {
+            console.error('Error creating Google user:', error)
+            return false
+          }
+        }
+
+        // Allow credentials login
+        return true
+      } catch (err) {
+        console.error('signIn callback error:', err, { account, profile })
+        return false
+      }
     },
+
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
@@ -142,8 +148,12 @@ export const authOptions: NextAuthOptions = {
     },
     async redirect({ url, baseUrl }) {
       // Prevent redirect loops
-      if (url.startsWith('/')) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
+      try {
+        if (typeof url === 'string' && url.startsWith('/')) return `${baseUrl}${url}`
+        else if (typeof url === 'string' && new URL(url).origin === baseUrl) return url
+      } catch (err) {
+        console.error('redirect callback error:', err, { url, baseUrl })
+      }
       return baseUrl
     },
   },
