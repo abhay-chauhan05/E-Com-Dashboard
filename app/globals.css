@@ -1,0 +1,53 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+:root {
+  --bg: #F9FAFB;
+  --surface: #FFFFFF;
+  --text: #0f172a;
+  --muted: #6B7280;
+  --accent: #0EA5A4; /* teal for light mode */
+} 
+
+.dark {
+  --bg: #0B1220;
+  --surface: #0F1724;
+  --text: #E6EEF6;
+  --muted: #94A3B8;
+  --accent: #7C3AED;
+}
+
+html, body {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Card styles */
+.card {
+  background-color: var(--surface);
+  border-color: rgba(255,255,255,0.04);
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium text-white;
+  background-color: var(--accent);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Utility to smooth transitions */
+.smooth-transition {
+  transition: background-color 200ms ease, color 200ms ease, transform 180ms ease;
+}
+
