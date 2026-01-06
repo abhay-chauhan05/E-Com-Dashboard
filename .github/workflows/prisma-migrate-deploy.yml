@@ -50,10 +50,12 @@ jobs:
         run: npm run build
 
       - name: Optional Vercel Deploy (if you provide tokens)
-        if: ${{ secrets.VERCEL_TOKEN && secrets.VERCEL_ORG_ID && secrets.VERCEL_PROJECT_ID }}
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+        run: |
+          # Deploy to Vercel if tokens are provided as secrets
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ] && [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "Vercel tokens found — deploying to Vercel"
+            npm i -g vercel@28 || true
+            npx vercel --prod --token "${{ secrets.VERCEL_TOKEN }}" --confirm
+          else
+            echo "Vercel tokens not provided; skipping Vercel deploy"
+          fi
