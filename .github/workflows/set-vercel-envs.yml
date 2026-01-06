@@ -1,0 +1,67 @@
+name: Set Vercel Environment Variables
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-vercel-envs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Prepare
+        run: |
+          echo "Preparing to set Vercel envs"
+
+      - name: Set Vercel envs via API
+        env:
+          VERCEL_TOKEN: ${{ secrets.TEMP_VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          TOKEN="$VERCEL_TOKEN"
+          PROJECT="$VERCEL_PROJECT_ID"
+          if [ -z "$TOKEN" ] || [ -z "$PROJECT" ]; then
+            echo "Missing Vercel token or project id; aborting"
+            exit 1
+          fi
+
+          echo "Setting environment variables on Vercel project: $PROJECT"
+
+          set_env() {
+            KEY="$1"
+            VAL="$2"
+            if [ -z "$VAL" ]; then
+              echo "Skipping $KEY: not provided"
+              return
+            fi
+            echo "Setting $KEY"
+            resp=$(curl -s -X POST "https://api.vercel.com/v9/projects/$PROJECT/env" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"key\":\"$KEY\",\"value\":\"$VAL\",\"target\":[\"production\"]}")
+            echo "$resp"
+          }
+
+          set_env "DATABASE_URL" "$DATABASE_URL"
+          set_env "NEXTAUTH_SECRET" "$NEXTAUTH_SECRET"
+          set_env "NEXTAUTH_URL" "$NEXTAUTH_URL"
+          set_env "GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_ID"
+          set_env "GOOGLE_CLIENT_SECRET" "$GOOGLE_CLIENT_SECRET"
+          set_env "SMTP_HOST" "$SMTP_HOST"
+          set_env "SMTP_PORT" "$SMTP_PORT"
+          set_env "SMTP_USER" "$SMTP_USER"
+          set_env "SMTP_PASS" "$SMTP_PASS"
+          set_env "ADMIN_EMAIL" "$ADMIN_EMAIL"
+          set_env "ADMIN_PASSWORD" "$ADMIN_PASSWORD"

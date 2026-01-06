@@ -358,6 +358,22 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
 ```
 
+#### Run database migrations in CI (recommended)
+
+To reliably apply schema migrations during deploys, add a dedicated workflow that runs `prisma migrate deploy` before building the app. Ensure the following GitHub Secrets are configured for your repository:
+
+- `DATABASE_URL` — production Postgres connection string
+- `NEXTAUTH_SECRET` — a 32-byte secret for next-auth
+- `ADMIN_EMAIL` and `ADMIN_PASSWORD` — optional: used by the seed step to create an initial admin user
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` — optional: allow the workflow to trigger a production deploy on Vercel
+
+A sample workflow file is included in this repository at `.github/workflows/prisma-migrate-deploy.yml` which runs migrations, seeds (creates an admin user), and builds the site.
+
+Notes:
+
+- `prisma migrate deploy` requires `DATABASE_URL` and an accessible production database. For Neon/Heroku/Railway, copy the provided connection string into the secret.
+- If you use Vercel, make sure the Vercel project is connected to the GitHub repository or provide Vercel tokens as secrets so the action can trigger a deploy.
+
 ## Troubleshooting Production Issues
 
 ### Database Connection Issues
